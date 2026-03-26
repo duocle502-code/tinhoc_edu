@@ -90,6 +90,10 @@ export function useCustomQuestions() {
   return useLocalStorage<Question[]>('ai_edu_custom_questions', []);
 }
 
+export function useReadLessons() {
+  return useLocalStorage<string[]>('ai_edu_read_lessons', []);
+}
+
 // Theme hook
 export function useTheme() {
   const [settings, setSettings] = useSettings();
