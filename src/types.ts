@@ -128,3 +128,23 @@ export interface SavedQuizState {
   savedAt: string;
   questionIds: string[];
 }
+
+export interface TextbookLesson {
+  id: string;
+  title: string;
+  content: string; // Markdown content
+  keyConcepts: string[];
+  grade: GradeLevel;
+  chapterIndex: number;
+  lessonIndex: number;
+  icon?: string;
+}
+
+export interface TextbookChapter {
+  id: string;
+  title: string;
+  description: string;
+  lessons: TextbookLesson[];
+  grade: GradeLevel;
+  icon: string;
+}
