@@ -1,4 +1,5 @@
 import { Subject, Question, Badge, Achievement, GradeLevel } from '../types';
+import { TEXTBOOK_CHAPTERS } from './textbookContent';
 
 export interface GradeInfo {
   value: GradeLevel;
@@ -27,6 +28,8 @@ export const GRADE_LEVELS = {
   highschool: { label: 'THPT', grades: [10, 11, 12], color: 'purple', emoji: '🎓' },
 };
 
+const colors = ['emerald', 'green', 'blue', 'sky', 'indigo', 'purple', 'violet', 'fuchsia', 'rose', 'orange', 'amber', 'yellow'];
+
 // ===== SUBJECTS: Chương ôn tập Tin học theo từng lớp =====
 export const DEMO_SUBJECTS: Subject[] = [
   // --- LỚP 1 ---
@@ -37,45 +40,19 @@ export const DEMO_SUBJECTS: Subject[] = [
   { id: 'g2_ch1', name: 'Thông tin và xử lý thông tin', icon: 'Laptop', questionsCount: 15, color: 'emerald', grade: 2 },
   { id: 'g2_ch2', name: 'Phần mềm học tập', icon: 'Laptop', questionsCount: 15, color: 'green', grade: 2 },
 
-  // --- LỚP 3 ---
-  { id: 'g3_ch1', name: 'Thông tin và máy tính', icon: 'Laptop', questionsCount: 15, color: 'emerald', grade: 3 },
-  { id: 'g3_ch2', name: 'Em tập soạn thảo', icon: 'Laptop', questionsCount: 15, color: 'green', grade: 3 },
-
-  // --- LỚP 4 ---
-  { id: 'g4_ch1', name: 'Soạn thảo văn bản', icon: 'Laptop', questionsCount: 15, color: 'emerald', grade: 4 },
-  { id: 'g4_ch2', name: 'Thiết kế bài trình chiếu', icon: 'Laptop', questionsCount: 15, color: 'green', grade: 4 },
-
-  // --- LỚP 5 ---
-  { id: 'g5_ch1', name: 'Internet và email', icon: 'Laptop', questionsCount: 15, color: 'emerald', grade: 5 },
-  { id: 'g5_ch2', name: 'Lập trình căn bản với Scratch', icon: 'Laptop', questionsCount: 15, color: 'green', grade: 5 },
-
-  // --- LỚP 6 ---
-  { id: 'g6_ch1', name: 'Máy tính và cộng đồng', icon: 'Laptop', questionsCount: 15, color: 'blue', grade: 6 },
-  { id: 'g6_ch2', name: 'Mạng máy tính và Internet', icon: 'Laptop', questionsCount: 15, color: 'sky', grade: 6 },
-
-  // --- LỚP 7 ---
-  { id: 'g7_ch1', name: 'Xử lý thông tin số', icon: 'Laptop', questionsCount: 15, color: 'blue', grade: 7 },
-  { id: 'g7_ch2', name: 'Phần mềm bảng tính', icon: 'Laptop', questionsCount: 15, color: 'sky', grade: 7 },
-
-  // --- LỚP 8 ---
-  { id: 'g8_ch1', name: 'Lập trình đơn giản', icon: 'Code2', questionsCount: 15, color: 'blue', grade: 8 },
-  { id: 'g8_ch2', name: 'Thuật toán và chương trình', icon: 'Code2', questionsCount: 15, color: 'sky', grade: 8 },
-
-  // --- LỚP 9 ---
-  { id: 'g9_ch1', name: 'Thiết kế website cơ bản', icon: 'Code2', questionsCount: 15, color: 'blue', grade: 9 },
-  { id: 'g9_ch2', name: 'An toàn thông tin', icon: 'Laptop', questionsCount: 15, color: 'sky', grade: 9 },
-
-  // --- LỚP 10 ---
-  { id: 'g10_ch1', name: 'Hệ thống máy tính và hệ điều hành', icon: 'Cpu', questionsCount: 15, color: 'purple', grade: 10 },
-  { id: 'g10_ch2', name: 'Hệ thống quản lý tệp và thư mục', icon: 'Laptop', questionsCount: 15, color: 'violet', grade: 10 },
-
-  // --- LỚP 11 ---
-  { id: 'g11_ch1', name: 'Lập trình cơ bản (Python/C++)', icon: 'Code2', questionsCount: 15, color: 'purple', grade: 11 },
-  { id: 'g11_ch2', name: 'Kiểu dữ liệu và cấu trúc lặp', icon: 'Code2', questionsCount: 15, color: 'violet', grade: 11 },
-
-  // --- LỚP 12 ---
-  { id: 'g12_ch1', name: 'Cơ sở dữ liệu quan hệ', icon: 'Database', questionsCount: 15, color: 'purple', grade: 12 },
-  { id: 'g12_ch2', name: 'Ngôn ngữ truy vấn SQL', icon: 'Database', questionsCount: 15, color: 'violet', grade: 12 },
+  // --- LỚP 3-12 (Từ sách Kết nối tri thức) ---
+  ...TEXTBOOK_CHAPTERS.map((ch, i) => ({
+    id: ch.id,
+    name: ch.title,
+    icon: (ch.icon === '💻' || ch.icon === '🖥️' || ch.icon === '📱') ? 'Laptop' : 
+          (ch.icon === '🌐' || ch.icon === '☁️' || ch.icon === '🌍') ? 'Network' :
+          (ch.icon === '📁' || ch.icon === '🗄️' || ch.icon === '📂') ? 'Database' :
+          (ch.icon === '🧩' || ch.icon === '🐱' || ch.icon === '🐍') ? 'Code2' :
+          (ch.icon === '🧠' || ch.icon === '💡' || ch.icon === '🤖' || ch.icon === '⚙️') ? 'Cpu' : 'BookOpen',
+    questionsCount: 15,
+    color: colors[i % colors.length],
+    grade: ch.grade
+  }))
 ];
 
 // ===== QUESTIONS: 15 câu mỗi chương =====
@@ -578,3 +555,15 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'ach_level_5', name: 'Đạt Level 5', description: 'Nâng cấp lên Level 5', icon: '⭐', target: 5, current: 0, completed: false },
   { id: 'ach_level_10', name: 'Đạt Level 10', description: 'Nâng cấp lên Level 10', icon: '🌟', target: 10, current: 0, completed: false },
 ];
+
+// Re-map existing demo questions to the new textbook chapters for grades 3-12
+DEMO_QUESTIONS.forEach(q => {
+  if (q.grade >= 3) {
+    const chapters = TEXTBOOK_CHAPTERS.filter(ch => ch.grade === q.grade);
+    if (chapters.length > 0) {
+      // Basic deterministic assignment to distribute questions across chapters
+      const hash = q.id.charCodeAt(q.id.length - 1);
+      q.subjectId = chapters[hash % chapters.length].id;
+    }
+  }
+});
