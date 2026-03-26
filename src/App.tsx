@@ -10,6 +10,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { PracticeMode } from './components/PracticeMode';
 import { Achievements } from './components/Achievements';
 import { Admin } from './components/Admin';
+import { LearningSection } from './components/LearningSection';
 import { useSettings} from './store';
 
 export default function App() {
@@ -35,6 +36,8 @@ export default function App() {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard />;
+      case 'learning':
+        return <LearningSection />;
       case 'subjects':
         return <SubjectList onSelectSubject={setSelectedSubject} />;
       case 'tutor':
