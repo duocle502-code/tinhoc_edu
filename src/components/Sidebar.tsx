@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, BrainCircuit, LayoutDashboard, History, Settings, Gamepad2, Trophy, ClipboardList } from 'lucide-react';
+import { BookOpen, BrainCircuit, LayoutDashboard, History, Settings, Gamepad2, Trophy, ClipboardList, BookMarked } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useGamification } from '../store';
 import { XP_PER_LEVEL } from '../data/demo';
@@ -16,6 +16,7 @@ export function Sidebar({ currentView, setCurrentView, isMobileOpen, setIsMobile
 
   const navItems = [
     { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard },
+    { id: 'learning', label: 'Kiến thức', icon: BookMarked },
     { id: 'subjects', label: 'Học tập', icon: BookOpen },
     { id: 'practice', label: 'Luyện tập', icon: Gamepad2 },
     { id: 'tutor', label: 'Gia sư AI', icon: BrainCircuit },
