@@ -1,5 +1,26 @@
 export type GradeLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
+export interface Exam {
+  id: string;
+  title: string;
+  description: string;
+  duration: number; // in seconds
+  questionIds: string[];
+  grade: GradeLevel;
+  subjectId?: string;
+}
+
+export interface ExamResult {
+  id: string;
+  examId: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  timeSpent: number;
+  date: string;
+  answers: Record<string, string>; // questionId -> answer
+}
+
 export interface Subject {
   id: string;
   name: string;
