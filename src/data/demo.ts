@@ -1,4 +1,4 @@
-import { Subject, Question, Badge, Achievement, GradeLevel } from '../types';
+import { Subject, Question, Badge, Achievement, GradeLevel, Exam } from '../types';
 import { TEXTBOOK_CHAPTERS } from './textbookContent';
 
 export interface GradeInfo {
@@ -567,3 +567,46 @@ DEMO_QUESTIONS.forEach(q => {
     }
   }
 });
+
+export const DEMO_EXAMS: Exam[] = [
+  {
+    id: 'exam_g1_mid',
+    title: 'Đề thi giữa kì I - Tin học Lớp 1',
+    description: 'Đề thi thử giữa học kì I, bao gồm kiến thức cơ bản về máy tính và thiết bị ngoại vi.',
+    duration: 900, // 15 minutes
+    questionIds: DEMO_QUESTIONS.filter(q => q.grade === 1).slice(0, 10).map(q => q.id),
+    grade: 1,
+  },
+  {
+    id: 'exam_g3_term1',
+    title: 'Đề thi học kì I - Tin học Lớp 3',
+    description: 'Đề thi học kì I tập trung vào các bộ phận máy tính, thao tác sử dụng và tập soạn thảo.',
+    duration: 1200, // 20 minutes
+    questionIds: DEMO_QUESTIONS.filter(q => q.grade === 3).slice(0, 15).map(q => q.id),
+    grade: 3,
+  },
+  {
+    id: 'exam_g6_term1',
+    title: 'Đề thi giữa kì I - Tin học Lớp 6',
+    description: 'Đề kiểm tra trắc nghiệm: thông tin trên mạng, phần mềm máy tính và bản quyền.',
+    duration: 1800, // 30 minutes
+    questionIds: DEMO_QUESTIONS.filter(q => q.grade === 6).slice(0, 15).map(q => q.id),
+    grade: 6,
+  },
+  {
+    id: 'exam_g9_term1',
+    title: 'Đề thi học kì I - Tin học Lớp 9',
+    description: 'Kiểm tra kiến thức tổng hợp về thiết kế web cơ bản (HTML/CSS) và khái niệm an toàn thông tin cơ bản.',
+    duration: 2700, // 45 minutes
+    questionIds: DEMO_QUESTIONS.filter(q => q.grade === 9).slice(0, 20).map(q => q.id),
+    grade: 9,
+  },
+  {
+    id: 'exam_g10_mid',
+    title: 'Đề thi giữa kì I - Tin học Lớp 10',
+    description: 'Củng cố kiến thức về hệ thống máy tính, hệ điều hành và tổ chức dữ liệu.',
+    duration: 2700, // 45 minutes
+    questionIds: DEMO_QUESTIONS.filter(q => q.grade === 10).slice(0, 20).map(q => q.id),
+    grade: 10,
+  }
+];
