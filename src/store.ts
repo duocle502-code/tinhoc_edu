@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Settings, Progress, Session, ChatMessage, GamificationState, QuestionAnswer, CostRecord, SavedQuizState, ThemeMode, Question, GradeLevel, Subject } from './types';
-import { ALL_ACHIEVEMENTS, DEMO_SUBJECTS } from './data/demo';
+import { Settings, Progress, Session, ChatMessage, GamificationState, QuestionAnswer, CostRecord, SavedQuizState, ThemeMode, Question, GradeLevel, Subject, Exam, ExamResult } from './types';
+import { ALL_ACHIEVEMENTS, DEMO_SUBJECTS, DEMO_EXAMS } from './data/demo';
 
 const defaultSettings: Settings = {
   theme: 'light',
@@ -159,4 +159,20 @@ export function useAllSubjects() {
   }, [customSubjects, setCustomSubjects]);
 
   return { allSubjects, customSubjects, addSubject, updateSubject, deleteSubject };
+}
+
+export function useCustomExams() {
+  return useLocalStorage<Exam[]>('ai_edu_custom_exams', []);
+}
+
+export function useAllExams() {
+  const [customExams] = useCustomExams();
+  const allExams = useMemo(() => {
+    return [...DEMO_EXAMS, ...customExams];
+  }, [customExams, DEMO_EXAMS]);
+  return { allExams, customExams };
+}
+
+export function useExamResults() {
+  return useLocalStorage<ExamResult[]>('ai_edu_exam_results', []);
 }
