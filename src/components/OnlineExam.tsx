@@ -609,6 +609,11 @@ function ExamResultView({ result, exam, questions, onBack }: {
                             Bạn chọn: <strong className={isCorrect ? "text-emerald-600" : "text-rose-600"}>{ans === true ? 'ĐÚNG' : ans === false ? 'SAI' : '(Trống)'}</strong>
                             {' '}— Đáp án: <strong className="text-emerald-600">{stmt.isTrue ? 'ĐÚNG' : 'SAI'}</strong>
                           </p>
+                          {stmt.explanation && (
+                            <p className="text-xs text-slate-600 mt-2 pt-2 border-t border-slate-200/50">
+                              <span className="italic font-medium">Giải thích:</span> {stmt.explanation}
+                            </p>
+                          )}
                         </div>
                       )
                     })}
