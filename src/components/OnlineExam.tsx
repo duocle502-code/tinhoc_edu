@@ -152,7 +152,7 @@ export function OnlineExam({ onBack }: Props) {
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-black text-emerald-600">{result.score}đ</p>
-                  <p className="text-xs font-medium text-emerald-700/80 dark:text-emerald-500/80">{result.correctAnswers}/{result.totalQuestions} câu</p>
+                  <p className="text-xs font-medium text-emerald-700/80 dark:text-emerald-500/80">Hoàn thành tốt</p>
                 </div>
               </div>
               
@@ -257,31 +257,67 @@ function ExamTaking({ exam, questions, onFinish, onCancel }: {
     return () => clearTimeout(timer);
   }, [timeLeft]);
 
+  const mcQs = questions.filter(q => q.type === 'multiple_choice' || !q.type);
+  const tfQs = questions.filter(q => q.type === 'true_false_cluster');
+  const esQs = questions.filter(q => q.type === 'essay');
+
   const submitExam = () => {
-    let correctCount = 0;
-    questions.forEach(q => {
+    let totalScore = 0;
+    
+    // MC: 0.25 each
+    mcQs.forEach(q => {
       if (answers[q.id] === q.correctAnswer) {
-        correctCount++;
+        totalScore += 0.25;
+      }
+    });
+
+    // TF: 0.25 each statement
+    tfQs.forEach(q => {
+      const uAnsStr = answers[q.id];
+      if (uAnsStr) {
+        try {
+          const uAns = JSON.parse(uAnsStr);
+          q.trueFalseStatements?.forEach(stmt => {
+            if (uAns[stmt.id] === stmt.isTrue) {
+              totalScore += 0.25;
+            }
+          });
+        } catch(e) {}
+      }
+    });
+
+    // Essay: 1.0 each based on keywords
+    esQs.forEach(q => {
+      const text = (answers[q.id] || '').toLowerCase();
+      if (text.length > 5 && q.keywords && q.keywords.length > 0) {
+        let matched = 0;
+        q.keywords.forEach(k => {
+          if (text.includes(k.toLowerCase())) matched++;
+        });
+        const ratio = matched / q.keywords.length;
+        // Grade dynamically up to 1.0 pt
+        // If matched >= 80%, full point. Otherwise proportional
+        let essayScore = ratio >= 0.8 ? 1.0 : parseFloat(ratio.toFixed(2));
+        totalScore += essayScore;
       }
     });
     
-    const score = Math.round((correctCount / questions.length) * 100);
-    const xpEarned = correctCount * 10;
+    totalScore = parseFloat(Math.min(10, totalScore).toFixed(2));
+    const xpEarned = Math.round(totalScore * 10);
     
     setGamification({
       ...gamification,
       xp: gamification.xp + xpEarned,
       level: Math.floor((gamification.xp + xpEarned) / 100) + 1,
       totalAnswered: gamification.totalAnswered + questions.length,
-      totalCorrect: gamification.totalCorrect + correctCount,
     });
     
     const result: ExamResult = {
       id: `res_${Date.now()}`,
       examId: exam.id,
-      score,
+      score: totalScore,
       totalQuestions: questions.length,
-      correctAnswers: correctCount,
+      correctAnswers: Math.floor(totalScore * 4), // Approximation for UI
       timeSpent: exam.duration - timeLeft,
       date: new Date().toISOString(),
       answers
@@ -333,37 +369,123 @@ function ExamTaking({ exam, questions, onFinish, onCancel }: {
         </div>
       </div>
 
-      <div className="space-y-8">
-        {questions.map((q, i) => (
-          <div key={q.id} id={`q-${q.id}`} className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 sm:p-8 scroll-mt-24">
-            <div className="flex gap-4 mb-6">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0">
-                {i + 1}
+      <div className="space-y-12">
+        {/* PART 1: MULTIPLE CHOICE */}
+        {mcQs.length > 0 && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-black text-indigo-900 dark:text-indigo-400 uppercase tracking-widest border-b-2 border-indigo-100 dark:border-indigo-900/50 pb-2">
+              Phần I. Câu trắc nghiệm nhiều phương án lựa chọn ({mcQs.length} câu)
+            </h2>
+            {mcQs.map((q, i) => (
+              <div key={q.id} id={`q-${q.id}`} className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 sm:p-8 scroll-mt-24">
+                <div className="flex gap-4 mb-6">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0">
+                    {i + 1}
+                  </div>
+                  <p className="font-bold text-lg text-slate-900 dark:text-white leading-relaxed pt-0.5">{q.content}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-12">
+                  {q.options?.map((opt, j) => {
+                    const isSelected = answers[q.id] === opt;
+                    return (
+                      <button
+                        key={j}
+                        onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
+                        className={cn(
+                          "p-4 rounded-xl border-2 text-left text-[15px] font-medium transition-all shadow-sm",
+                          isSelected
+                            ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-200 dark:ring-indigo-800"
+                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                        )}
+                      >
+                        {opt}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-              <p className="font-bold text-lg text-slate-900 dark:text-white leading-relaxed pt-0.5">{q.content}</p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-12">
-              {q.options?.map((opt, j) => {
-                const isSelected = answers[q.id] === opt;
-                return (
-                  <button
-                    key={j}
-                    onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
-                    className={cn(
-                      "p-4 rounded-xl border-2 text-left text-[15px] font-medium transition-all shadow-sm",
-                      isSelected
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-200 dark:ring-indigo-800"
-                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                    )}
-                  >
-                    {opt}
-                  </button>
-                )
-              })}
-            </div>
+            ))}
           </div>
-        ))}
+        )}
+
+        {/* PART 2: TRUE / FALSE CLUSTER */}
+        {tfQs.length > 0 && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-black text-emerald-900 dark:text-emerald-400 uppercase tracking-widest border-b-2 border-emerald-100 dark:border-emerald-900/50 pb-2">
+              Phần II. Câu trắc nghiệm đúng sai ({tfQs.length} câu)
+            </h2>
+            {tfQs.map((q, i) => {
+              const uAns = JSON.parse(answers[q.id] || '{}');
+              return (
+                <div key={q.id} id={`q-${q.id}`} className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 sm:p-8 scroll-mt-24">
+                  <div className="flex gap-4 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </div>
+                    <p className="font-bold text-lg text-slate-900 dark:text-white leading-relaxed pt-0.5">{q.content}</p>
+                  </div>
+                  
+                  <div className="space-y-3 pl-12">
+                    {q.trueFalseStatements?.map((stmt, j) => {
+                      const ans = uAns[stmt.id];
+                      return (
+                        <div key={stmt.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                          <p className="font-medium text-[15px] text-slate-800 dark:text-slate-200 flex-1">
+                            <span className="font-bold text-slate-500 mr-2">{stmt.id.toUpperCase()}.</span>
+                            {stmt.content}
+                          </p>
+                          <div className="flex gap-2 shrink-0">
+                            <button
+                              onClick={() => setAnswers(prev => ({ ...prev, [q.id]: JSON.stringify({ ...uAns, [stmt.id]: true }) }))}
+                              className={cn("px-6 py-2 rounded-lg font-bold transition-all border", ans === true ? "bg-emerald-500 text-white border-emerald-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 hover:bg-slate-100")}
+                            >
+                              ĐÚNG
+                            </button>
+                            <button
+                              onClick={() => setAnswers(prev => ({ ...prev, [q.id]: JSON.stringify({ ...uAns, [stmt.id]: false }) }))}
+                              className={cn("px-6 py-2 rounded-lg font-bold transition-all border", ans === false ? "bg-rose-500 text-white border-rose-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 hover:bg-slate-100")}
+                            >
+                              SAI
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* PART 3: ESSAY */}
+        {esQs.length > 0 && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-black text-amber-900 dark:text-amber-400 uppercase tracking-widest border-b-2 border-amber-100 dark:border-amber-900/50 pb-2">
+              Phần III. Câu trắc nghiệm trả lời ngắn / Tự luận ({esQs.length} câu)
+            </h2>
+            {esQs.map((q, i) => (
+              <div key={q.id} id={`q-${q.id}`} className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 sm:p-8 scroll-mt-24">
+                <div className="flex gap-4 mb-6">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 font-bold flex items-center justify-center shrink-0">
+                    {i + 1}
+                  </div>
+                  <p className="font-bold text-lg text-slate-900 dark:text-white leading-relaxed pt-0.5">{q.content}</p>
+                </div>
+                
+                <div className="pl-12">
+                  <textarea
+                    value={answers[q.id] || ''}
+                    onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                    placeholder="Nhập câu trả lời của bạn vào đây..."
+                    className="w-full p-4 h-32 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 transition-all resize-y"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Floating Bottom Bar */}
@@ -412,7 +534,11 @@ function ExamResultView({ result, exam, questions, onBack }: {
   onBack: () => void; 
 }) {
   const pct = result.score;
-  const isPass = pct >= 80;
+  const isPass = pct >= 8;
+
+  const mcQs = questions.filter(q => q.type === 'multiple_choice' || !q.type);
+  const tfQs = questions.filter(q => q.type === 'true_false_cluster');
+  const esQs = questions.filter(q => q.type === 'essay');
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto animate-slide-up space-y-6">
@@ -424,66 +550,110 @@ function ExamResultView({ result, exam, questions, onBack }: {
         {isPass && (
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-400" />
         )}
-        <div className="text-6xl mb-2">{isPass ? '🏆' : pct >= 50 ? '📝' : '📖'}</div>
+        <div className="text-6xl mb-2">{isPass ? '🏆' : pct >= 5 ? '📝' : '📖'}</div>
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{exam.title}</h2>
         
         <div className="flex items-center justify-center gap-2">
-          <p className={cn("text-6xl font-black", isPass ? "text-emerald-600" : pct >= 50 ? "text-amber-500" : "text-rose-500")}>
+          <p className={cn("text-6xl font-black", isPass ? "text-emerald-600" : pct >= 5 ? "text-amber-500" : "text-rose-500")}>
             {pct}<span className="text-3xl">đ</span>
           </p>
         </div>
         
         <div className="flex justify-center gap-6 text-sm text-slate-500 dark:text-slate-400 mt-6">
-          <p className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> {result.correctAnswers}/{result.totalQuestions} câu</p>
           <p className="flex items-center gap-1"><Clock className="w-4 h-4 text-blue-500" /> {Math.floor(result.timeSpent / 60)} phút {result.timeSpent % 60}s</p>
-          <p className="flex items-center gap-1"><Zap className="w-4 h-4 text-amber-500" /> +{result.correctAnswers * 10} XP</p>
+          <p className="flex items-center gap-1"><Zap className="w-4 h-4 text-amber-500" /> +{Math.round(result.score * 10)} XP</p>
         </div>
       </div>
 
-      <div className="space-y-4 pt-6">
-        <h3 className="font-bold text-xl text-slate-900 dark:text-white px-2">Chi tiết đáp án</h3>
-        {questions.map((q, i) => {
-          const userAnswer = result.answers[q.id];
-          const isCorrect = userAnswer === q.correctAnswer;
-          const isUnanswered = !userAnswer;
-
-          return (
-            <div key={q.id} className={cn(
-              "p-6 rounded-2xl border-2 bg-white dark:bg-slate-800 shadow-sm",
-              isCorrect ? "border-emerald-200 dark:border-emerald-800/50" : "border-rose-200 dark:border-rose-800/50"
-            )}>
-              <div className="flex gap-3 mb-4">
-                <div className="mt-1 shrink-0">
-                  {isCorrect ? <CheckCircle2 className="w-6 h-6 text-emerald-600" /> : <XCircle className="w-6 h-6 text-rose-600" />}
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white mb-1">
-                    <span className="text-slate-500 font-medium mr-2">Câu {i + 1}:</span>
-                    {q.content}
-                  </p>
-                  <p className="text-sm">
-                    {isUnanswered ? (
-                      <span className="text-amber-600 italic">Ban chưa trả lời câu này.</span>
-                    ) : (
-                      <span className="text-slate-600 dark:text-slate-400">Bạn chọn: <strong className={isCorrect ? "text-emerald-600" : "text-rose-600 line-through"}>{userAnswer}</strong></span>
-                    )}
-                  </p>
-                </div>
-              </div>
+      <div className="space-y-12 pt-6">
+        
+        {/* RESULT: PART 1 */}
+        {mcQs.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-bold text-xl text-slate-900 dark:text-white px-2 mb-4">I. Trắc nghiệm nhiều lựa chọn</h3>
+            {mcQs.map((q, i) => {
+              const userAnswer = result.answers[q.id];
+              const isCorrect = userAnswer === q.correctAnswer;
               
-              <div className="ml-9 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
-                <p className="text-sm text-slate-700 dark:text-slate-300">
-                  Đáp án đúng: <strong className="text-emerald-600 dark:text-emerald-400">{q.correctAnswer}</strong>
-                </p>
-                {q.explanation && (
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 mt-2 leading-relaxed border-t border-slate-200 dark:border-slate-700 pt-2">
-                    <span className="font-bold text-slate-700 dark:text-slate-300">Giải thích:</span> {q.explanation}
-                  </p>
-                )}
-              </div>
-            </div>
-          );
-        })}
+              return (
+                <div key={q.id} className={cn("p-6 rounded-2xl border-2 shadow-sm", isCorrect ? "border-emerald-200 bg-white" : "border-rose-200 bg-white")}>
+                  <p className="font-bold mb-2">Câu {i + 1}: {q.content}</p>
+                  <p className="text-sm mb-3">Bạn chọn: <strong className={isCorrect ? "text-emerald-600" : "text-rose-600"}>{userAnswer || '(Trống)'}</strong></p>
+                  <div className="p-3 bg-slate-50 rounded-lg text-sm">
+                    Đáp án đúng: <strong className="text-emerald-600">{q.correctAnswer}</strong>
+                    {q.explanation && <p className="mt-2 text-slate-600 italic">Giải thích: {q.explanation}</p>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* RESULT: PART 2 */}
+        {tfQs.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-bold text-xl text-slate-900 dark:text-white px-2 mb-4">II. Trắc nghiệm đúng sai</h3>
+            {tfQs.map((q, i) => {
+              const uAns = JSON.parse(result.answers[q.id] || '{}');
+              return (
+                <div key={q.id} className="p-6 rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+                  <p className="font-bold mb-4">Câu {i + 1}: {q.content}</p>
+                  <div className="space-y-3">
+                    {q.trueFalseStatements?.map(stmt => {
+                      const ans = uAns[stmt.id];
+                      const isCorrect = ans === stmt.isTrue;
+                      return (
+                        <div key={stmt.id} className={cn("p-3 rounded-lg border", isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200")}>
+                          <p className="text-sm font-medium mb-1"><span className="uppercase text-slate-500 mr-2">{stmt.id}.</span> {stmt.content}</p>
+                          <p className="text-xs">
+                            Bạn chọn: <strong className={isCorrect ? "text-emerald-600" : "text-rose-600"}>{ans === true ? 'ĐÚNG' : ans === false ? 'SAI' : '(Trống)'}</strong>
+                            {' '}— Đáp án: <strong className="text-emerald-600">{stmt.isTrue ? 'ĐÚNG' : 'SAI'}</strong>
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {q.explanation && (
+                    <div className="mt-4 p-3 bg-slate-50 rounded-lg text-sm text-slate-600 italic">
+                      Giải thích chung: {q.explanation}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* RESULT: PART 3 */}
+        {esQs.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-bold text-xl text-slate-900 dark:text-white px-2 mb-4">III. Tự luận / Trả lời ngắn</h3>
+            {esQs.map((q, i) => {
+              const uAns = result.answers[q.id] || '';
+              return (
+                <div key={q.id} className="p-6 rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
+                  <p className="font-bold mb-4">Câu {i + 1}: {q.content}</p>
+                  <div className="mb-4">
+                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Câu trả lời của bạn:</p>
+                    <div className="p-4 bg-slate-50 rounded-xl text-slate-800 border border-slate-200 whitespace-pre-wrap">
+                      {uAns || <span className="text-slate-400 italic">Chưa làm</span>}
+                    </div>
+                  </div>
+                  <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <p className="text-xs font-bold text-indigo-500 uppercase mb-1">Gợi ý chấm điểm (Keyword Matching):</p>
+                    <p className="text-sm text-slate-700 mb-2">{q.explanation}</p>
+                    {q.keywords && (
+                      <p className="text-xs text-slate-500">
+                        Từ khoá yêu cầu: {q.keywords.map(k => <span key={k} className="inline-block px-2 py-1 bg-white rounded border mr-1 mb-1 font-mono text-indigo-600">{k}</span>)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
       </div>
     </div>
   );
