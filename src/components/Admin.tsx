@@ -3,7 +3,7 @@ import { useCustomQuestions, useSettings, useAllSubjects } from '../store';
 import { DEMO_QUESTIONS } from '../data/demo';
 import { extractTextFromFile, parseQuestionsFromText } from '../lib/fileParser';
 import { generateQuestionsAI } from '../lib/gemini';
-import { Question } from '../types';
+import { Question, GradeLevel } from '../types';
 import { MathText } from './MathText';
 import {
   Plus, Trash2, Upload, FileText, Sparkles, Save, Edit3, Pencil,
@@ -18,9 +18,16 @@ export function Admin() {
   const [customQuestions, setCustomQuestions] = useCustomQuestions();
   const { allSubjects, customSubjects, addSubject, updateSubject, deleteSubject } = useAllSubjects();
   const [activeTab, setActiveTab] = useState<'list' | 'add' | 'import' | 'ai' | 'subjects'>('list');
+  const [adminGrade, setAdminGrade] = useState<GradeLevel | null>(null);
 
   const allCustom = customQuestions;
-  const totalBySubject = allSubjects.map(s => ({
+  
+  // Filter subjects by selected grade
+  const filteredSubjects = adminGrade 
+    ? allSubjects.filter(s => s.grade === adminGrade) 
+    : allSubjects;
+
+  const totalBySubject = filteredSubjects.map(s => ({
     ...s,
     demoCount: DEMO_QUESTIONS.filter(q => q.subjectId === s.id).length,
     customCount: allCustom.filter(q => q.subjectId === s.id).length,
@@ -46,20 +53,60 @@ export function Admin() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {totalBySubject.map(s => (
-          <div key={s.id} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">{s.name}</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-              {s.demoCount + s.customCount}
-            </p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {s.demoCount} mặc định + {s.customCount} tùy chỉnh
-            </p>
-          </div>
+      {/* Grade Filter */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
+        <button
+          onClick={() => setAdminGrade(null)}
+          className={cn(
+            "px-4 py-2 rounded-xl whitespace-nowrap font-bold text-sm transition-all snap-start shadow-sm",
+            adminGrade === null
+              ? "bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none"
+              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+          )}
+        >
+          Tất cả lớp
+        </button>
+        {Array.from({ length: 12 }, (_, i) => (i + 1) as GradeLevel).map(grade => (
+          <button
+            key={grade}
+            onClick={() => setAdminGrade(grade)}
+            className={cn(
+              "px-4 py-2 rounded-xl whitespace-nowrap font-bold text-sm transition-all snap-start shadow-sm",
+              adminGrade === grade
+                ? "bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none"
+                : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+            )}
+          >
+            Lớp {grade}
+          </button>
         ))}
       </div>
+
+      {/* Summary Cards */}
+      {adminGrade ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {totalBySubject.length > 0 ? totalBySubject.map(s => (
+            <div key={s.id} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">{s.name}</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                {s.demoCount + s.customCount}
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {s.demoCount} mặc định + {s.customCount} tùy chỉnh
+              </p>
+            </div>
+          )) : (
+            <div className="col-span-full p-6 text-center text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+              Chưa có chủ đề nào cho Lớp {adminGrade}.
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800/30 text-sm text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          Vui lòng chọn một lớp ở trên để xem và quản lý chủ đề/câu hỏi.
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl overflow-x-auto">
@@ -90,7 +137,7 @@ export function Admin() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'list' && <QuestionList questions={allCustom} subjects={allSubjects} onDelete={(id) => {
+      {activeTab === 'list' && <QuestionList questions={adminGrade ? allCustom.filter(q => q.grade === adminGrade || filteredSubjects.some(s => s.id === q.subjectId)) : allCustom} subjects={filteredSubjects} onDelete={(id) => {
         setCustomQuestions(allCustom.filter(q => q.id !== id));
       }} onEdit={(q) => setEditingQuestion(q)} onClearAll={() => {
         Swal.fire({
@@ -109,14 +156,14 @@ export function Admin() {
         });
       }} />}
 
-      {activeTab === 'add' && <ManualQuestionForm subjects={allSubjects} onSave={(q) => {
+      {activeTab === 'add' && <ManualQuestionForm subjects={filteredSubjects} onSave={(q) => {
         setCustomQuestions([...allCustom, q]);
         Swal.fire({ icon: 'success', title: 'Đã thêm câu hỏi!', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
       }} />}
 
       {activeTab === 'import' && <FileImport
         apiKey={settings.apiKey}
-        subjects={allSubjects}
+        subjects={filteredSubjects}
         onImport={(questions) => {
           setCustomQuestions([...allCustom, ...questions]);
         }}
@@ -126,7 +173,7 @@ export function Admin() {
         apiKey={settings.apiKey}
         modelId={settings.selectedModel}
         apiKeys={settings.apiKeys}
-        subjects={allSubjects}
+        subjects={filteredSubjects}
         onImport={(questions) => {
           setCustomQuestions([...allCustom, ...questions]);
         }}
