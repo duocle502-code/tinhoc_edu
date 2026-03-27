@@ -568,114 +568,107 @@ DEMO_QUESTIONS.forEach(q => {
   }
 });
 
-const ADVANCED_G10_QUESTIONS: Question[] = [
-  // 24 MC Questions (mix of real info and placeholders for demo purposes)
-  ...Array.from({ length: 24 }).map((_, i): Question => ({
-    id: `g10_adv_mc_${i + 1}`,
-    subjectId: 'g10',
-    type: 'multiple_choice',
-    grade: 10,
-    difficulty: i < 10 ? 'easy' : (i < 20 ? 'medium' : 'hard'),
-    content: i === 0 ? 'Phát biểu nào sau đây về Dữ liệu và Thông tin là ĐÚNG?'
-           : i === 1 ? 'Theo chuẩn KNTT, đâu là đặc điểm của thông tin số?'
-           : i === 2 ? 'Giao thức nào được sử dụng để truyền tải tệp tin trên mạng Internet?'
-           : `Câu hỏi trắc nghiệm số ${i + 1} - Tin học 10 Kết nối tri thức.`,
-    options: i === 0 ? ['Dữ liệu là thông tin đã qua xử lý', 'Thông tin là dữ liệu đã được mang ý nghĩa', 'Dữ liệu và Thông tin là một', 'Không có đáp án đúng']
-           : i === 1 ? ['Chỉ lưu trữ được trên giấy', 'Dễ dàng sao chép và phát tán', 'Không thể bị biến đổi', 'Chỉ dùng để tính toán']
-           : i === 2 ? ['HTTP', 'SMTP', 'FTP', 'IP']
-           : ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'],
-    correctAnswer: i === 0 ? 'Thông tin là dữ liệu đã được mang ý nghĩa'
-                 : i === 1 ? 'Dễ dàng sao chép và phát tán'
-                 : i === 2 ? 'FTP'
-                 : 'Phương án A',
-    explanation: 'Đây là câu hỏi mẫu cho Phần I: Trắc nghiệm khách quan.'
-  })),
-  // 2 True/False Cluster Questions
-  {
-    id: `g10_adv_tf_1`,
-    subjectId: 'g10',
-    type: 'true_false_cluster',
-    grade: 10,
-    difficulty: 'medium',
-    content: 'Khi sử dụng các dịch vụ trên Internet, một học sinh đưa ra các nhận định sau đây. Bạn hãy xác định nhận định Đúng/Sai:',
-    trueFalseStatements: [
-      { id: 'a', content: 'Điện toán đám mây cho phép lưu trữ và chia sẻ file dễ dàng (như Google Drive).', isTrue: true },
-      { id: 'b', content: 'Khi dùng mạng WiFi công cộng, thông tin cá nhân luôn được mã hóa an toàn 100%.', isTrue: false },
-      { id: 'c', content: 'Trojan là một loại mã độc đóng giả phần mềm vô hại để lừa người dùng cài đặt.', isTrue: true },
-      { id: 'd', content: 'Vi-rút máy tính có khả năng tự động nhân bản và lây lan qua tin nhắn SMS trên điện thoại cơ bản.', isTrue: false }
-    ],
-    explanation: 'Mạng WiFi công cộng rất dễ bị tấn công nghe lén (Man-in-the-middle). Vi-rút cần gắn vào file thực thi để lây lan, không lây qua SMS thông thường mà đó thường là phishing.'
-  },
-  {
-    id: `g10_adv_tf_2`,
-    subjectId: 'g10',
-    type: 'true_false_cluster',
-    grade: 10,
-    difficulty: 'hard',
-    content: 'Trong Python, các học sinh đang thảo luận về Biến và Kiểu dữ liệu. Những phát biểu sau đây Đúng hay Sai?',
-    trueFalseStatements: [
-      { id: 'a', content: 'Một biến có thể linh hoạt thay đổi kiểu dữ liệu trong quá trình thực thi chương trình.', isTrue: true },
-      { id: 'b', content: 'Danh sách (List) được đặt trong dấu ngoặc đơn () và không thể thay đổi phần tử.', isTrue: false },
-      { id: 'c', content: 'Hàm int() có thể chuyển đổi chuỗi "10.5" trực tiếp thành số nguyên.', isTrue: false },
-      { id: 'd', content: 'Kiểu boolean trong Python chỉ có hai giá trị là True và False (chữ cái đầu viết hoa).', isTrue: true }
-    ],
-    explanation: 'List đặt trong [], Tuple mới đặt trong (). Hàm int() sẽ báo lỗi nếu cố chuyển chuỗi có dấu thập phân "10.5" trực tiếp.'
-  },
-  // 2 Essay Questions
-  {
-    id: `g10_adv_es_1`,
-    subjectId: 'g10',
-    type: 'essay',
-    grade: 10,
-    difficulty: 'medium',
-    content: 'Bạn hãy trình bày ngắn gọn sự khác nhau cơ bản giữa mạng LAN và mạng WAN. Lấy một ví dụ minh họa về mạng LAN.',
-    keywords: ['cục bộ', 'diện rộng', 'hẹp', 'rộng', 'lan', 'wan', 'quốc gia', 'công ty', 'trường học', 'nhà'],
-    explanation: 'LAN là mạng cục bộ phạm vi hẹp. WAN là mạng diện rộng phạm vi lớn. Ví dụ LAN: mạng WiFi ở nhà, phòng máy trường học.'
-  },
-  {
-    id: `g10_adv_es_2`,
-    subjectId: 'g10',
-    type: 'essay',
-    grade: 10,
-    difficulty: 'hard',
-    content: 'Phần mềm mã nguồn mở mang lại những lợi ích gì cho cộng đồng? Liệu sử dụng phần mềm mã nguồn mở có bị vi phạm bản quyền không? Tại sao?',
-    keywords: ['miễn phí', 'cộng đồng', 'phát triển', 'chia sẻ', 'không vi phạm', 'giấy phép', 'bản quyền', 'cải tiến', 'mã nguồn'],
-    explanation: 'Lợi ích: Miễn phí, cộng đồng cùng phát triển, tính mở. Không vi phạm bản quyền nếu tuân thủ đúng giấy phép mã nguồn mở đính kèm (như GPL, MIT).'
-  }
-];
+const ADVANCED_QUESTIONS: Question[] = [];
 
-// Add the advanced questions mapping into DEMO_QUESTIONS so it can be queried globally if needed
-DEMO_QUESTIONS.push(...ADVANCED_G10_QUESTIONS);
+for (let g = 1; g <= 12; g++) {
+  const grade = g as GradeLevel;
+  
+  // 24 MC Questions
+  for (let i = 0; i < 24; i++) {
+    ADVANCED_QUESTIONS.push({
+      id: `g${grade}_adv_mc_${i + 1}`,
+      subjectId: `g${grade}`,
+      type: 'multiple_choice',
+      grade: grade,
+      difficulty: i < 10 ? 'easy' : (i < 20 ? 'medium' : 'hard'),
+      content: i === 0 ? `Câu hỏi trắc nghiệm số 1 - Tin học ${grade} Kết nối tri thức.`
+             : `Câu hỏi trắc nghiệm số ${i + 1} - Tin học ${grade} Kết nối tri thức.`,
+      options: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'],
+      correctAnswer: 'Phương án A',
+      explanation: `Đây là câu hỏi mẫu trắc nghiệm môn Tin học lớp ${grade}.`
+    });
+  }
+
+  // 2 True/False Cluster Questions
+  ADVANCED_QUESTIONS.push({
+    id: `g${grade}_adv_tf_1`,
+    subjectId: `g${grade}`,
+    type: 'true_false_cluster',
+    grade: grade,
+    difficulty: 'medium',
+    content: `Các phát biểu sau đây về kiến thức Tin học lớp ${grade} là Đúng hay Sai?`,
+    trueFalseStatements: [
+      { id: 'a', content: 'Phát biểu A là một kiến thức hoàn toàn chính xác.', isTrue: true },
+      { id: 'b', content: 'Phát biểu B có chứa thông tin sai lệch.', isTrue: false },
+      { id: 'c', content: 'Phát biểu C phản ánh đúng bản chất vấn đề.', isTrue: true },
+      { id: 'd', content: 'Phát biểu D chưa chính xác trong thực tế.', isTrue: false }
+    ],
+    explanation: 'Giải thích: Việc nắm vững lý thuyết giúp phân biệt được đúng sai.'
+  });
+  
+  ADVANCED_QUESTIONS.push({
+    id: `g${grade}_adv_tf_2`,
+    subjectId: `g${grade}`,
+    type: 'true_false_cluster',
+    grade: grade,
+    difficulty: 'hard',
+    content: `Đọc kỹ tình huống thực tế sau và xác định tính Đúng/Sai của mỗi nhận định:`,
+    trueFalseStatements: [
+      { id: 'a', content: 'Nhận định thứ nhất áp dụng tốt trong thực tiễn.', isTrue: true },
+      { id: 'b', content: 'Nhận định thứ hai là sai nguyên tắc.', isTrue: false },
+      { id: 'c', content: 'Nhận định thứ ba sai hoàn toàn.', isTrue: false },
+      { id: 'd', content: 'Nhận định cuối là một nguyên tắc cơ bản cần nhớ.', isTrue: true }
+    ],
+    explanation: 'Giải thích: Áp dụng kiến thức thực tiễn để giải quyết.'
+  });
+
+  // 2 Essay Questions
+  ADVANCED_QUESTIONS.push({
+    id: `g${grade}_adv_es_1`,
+    subjectId: `g${grade}`,
+    type: 'essay',
+    grade: grade,
+    difficulty: 'medium',
+    content: `Hãy trình bày ngắn gọn một khái niệm trọng tâm mà em đã học trong chương trình Tin học ${grade}.`,
+    keywords: ['khái niệm', 'phần mềm', 'tin học', `lớp ${grade}`, 'quan trọng', 'cơ bản'],
+    explanation: 'Câu trả lời tự luận cần bao hàm các từ khoá liên quan đến kiến thức cơ bản của môn học.'
+  });
+  
+  ADVANCED_QUESTIONS.push({
+    id: `g${grade}_adv_es_2`,
+    subjectId: `g${grade}`,
+    type: 'essay',
+    grade: grade,
+    difficulty: 'hard',
+    content: `Ứng dụng của Tin học ${grade} trong đời sống thực tế là gì? Em hãy lấy ví dụ minh hoạ.`,
+    keywords: ['ứng dụng', 'đời sống', 'ví dụ', 'thực tế', 'giải quyết', 'hữu ích', 'công nghệ'],
+    explanation: 'Trình bày tư duy áp dụng công nghệ và lấy ví dụ thực tiễn.'
+  });
+}
+
+// Add all generated questions to global storage
+DEMO_QUESTIONS.push(...ADVANCED_QUESTIONS);
 
 export const DEMO_EXAMS: Exam[] = Array.from({ length: 12 }, (_, i) => {
   const grade = (i + 1) as GradeLevel;
-  
-  if (grade === 10) {
-    return {
-      id: `exam_g10_3part`,
-      title: `Đề kiểm tra chuẩn cấu trúc (3 Phần) - Tin học 10 KNTT`,
-      description: `Đề thử nghiệm giới thiệu cấu trúc kỳ thi chuẩn mới: Trắc nghiệm (24 câu) - Đúng/Sai (2 câu) - Tự luận (2 câu).`,
-      duration: 2700, // 45 phút
-      questionIds: ADVANCED_G10_QUESTIONS.map(q => q.id),
-      grade: 10,
-    };
-  }
 
-  let gradeQs = DEMO_QUESTIONS.filter(q => q.grade === grade && q.type === 'multiple_choice');
-  
-  // Nếu không đủ câu hỏi cho lớp này, lấy tạm câu hỏi lớp khác để demo
-  if (gradeQs.length === 0) {
-    gradeQs = DEMO_QUESTIONS.slice(0, 15);
-  }
+  // Thu thập ID của đúng 28 câu hỏi thuộc lớp này
+  const qIds = [
+    ...Array.from({ length: 24 }).map((_, j) => `g${grade}_adv_mc_${j + 1}`),
+    `g${grade}_adv_tf_1`,
+    `g${grade}_adv_tf_2`,
+    `g${grade}_adv_es_1`,
+    `g${grade}_adv_es_2`
+  ];
 
-  const duration = grade <= 5 ? 1200 : (grade <= 9 ? 1800 : 2700); // 20 phút Tiểu học, 30 phút THCS, 45 phút THPT
+  const duration = grade <= 5 ? 1200 : (grade <= 9 ? 1800 : 2700); // Tiểu học 20m, THCS 30m, THPT 45m
 
   return {
-    id: `exam_g${grade}_demo`,
-    title: `Đề thi trọn bộ - Tin học Lớp ${grade}`,
-    description: `Đề kiểm tra đánh giá năng lực môn Tin học dành cho học sinh lớp ${grade}. Bao gồm các câu hỏi trắc nghiệm bám sát chương trình học.`,
+    id: `exam_g${grade}_3part`,
+    title: `Đề kiểm tra chuẩn cấu trúc (3 Phần) - Tin học ${grade} KNTT`,
+    description: `Đề thi 3 phần chuẩn mẫu: Trắc nghiệm (24 câu) - Đúng/Sai (2 câu) - Tự luận (2 câu) bám sát sách Kết nối tri thức Lớp ${grade}.`,
     duration: duration,
-    questionIds: gradeQs.slice(0, 20).map(q => q.id),
+    questionIds: qIds,
     grade: grade,
   };
 });
