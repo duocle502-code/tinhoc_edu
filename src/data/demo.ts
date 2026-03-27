@@ -570,22 +570,49 @@ DEMO_QUESTIONS.forEach(q => {
 
 const ADVANCED_QUESTIONS: Question[] = [];
 
+// Helper: trích xuất 1 dòng ý nghĩa từ content bài học
+function extractSnippet(content: string | undefined, keyword: string): string {
+  if (!content) return '';
+  const lines = content.split('\n').map(l => l.replace(/^[#*\->\s`|]+/, '').trim()).filter(l => l.length > 10);
+  const match = lines.find(l => l.toLowerCase().includes(keyword.toLowerCase()));
+  if (match) return match.length > 120 ? match.slice(0, 117) + '...' : match;
+  return lines.find(l => l.length > 15 && !l.startsWith('|') && !l.startsWith('```'))?.slice(0, 120) || '';
+}
+
 for (let g = 1; g <= 12; g++) {
   const grade = g as GradeLevel;
   const gradeChapters = TEXTBOOK_CHAPTERS.filter(c => c.grade === grade);
   const gradeLessons = gradeChapters.flatMap(c => c.lessons);
   
-  const FALLBACK_TOPICS: Record<number, { title: string, keys: string[] }[]> = {
-    1: [{ title: 'Làm quen với máy tính', keys: ['chuột', 'màn hình', 'bàn phím', 'thân máy'] }],
-    2: [{ title: 'Khám phá thế giới số', keys: ['thông tin', 'an toàn', 'internet', 'trò chơi'] }],
-    9: [{ title: 'Mạng máy tính và truyền thông', keys: ['kết nối mạng', 'mô hình mang', 'bảo mật', 'IoT', 'giao thức'] }],
-    10: [{ title: 'Tin học cơ sở và Khoa học máy tính', keys: ['dữ liệu số', 'thông tin', 'mạng LAN', 'mã nguồn mở', 'Python'] }],
-    11: [{ title: 'Cơ sở dữ liệu căn bản', keys: ['hệ quản trị CSDL', 'bảng dữ liệu', 'SQL', 'bảo mật hệ thống', 'thực thể'] }],
+  const FALLBACK_TOPICS: Record<number, { title: string, keys: string[], content: string }[]> = {
+    1: [
+      { title: 'Làm quen với máy tính', keys: ['chuột', 'màn hình', 'bàn phím', 'thân máy'], content: 'Máy tính gồm các bộ phận: thân máy, màn hình, bàn phím, chuột. Chuột dùng để di chuyển con trỏ và chọn đối tượng trên màn hình. Bàn phím dùng để gõ chữ và nhập thông tin vào máy tính.' },
+      { title: 'Sử dụng chuột máy tính', keys: ['nhấp chuột', 'kéo thả', 'con trỏ', 'nhấp đúp'], content: 'Nhấp chuột trái 1 lần để chọn, nhấp đúp để mở. Nhấp chuột phải để xem menu. Kéo thả giúp di chuyển đối tượng trên màn hình.' },
+    ],
+    2: [
+      { title: 'Khám phá thế giới số', keys: ['thông tin', 'an toàn', 'internet', 'trò chơi'], content: 'Thông tin trong cuộc sống gồm hình ảnh, âm thanh, chữ viết. Internet giúp kết nối mọi người và tìm kiếm thông tin. Cần giữ an toàn khi sử dụng internet, không chia sẻ thông tin cá nhân với người lạ.' },
+      { title: 'Gõ bàn phím cơ bản', keys: ['phím Enter', 'phím Space', 'phím Backspace', 'gõ chữ'], content: 'Phím Enter dùng để xác nhận hoặc xuống dòng. Phím Space tạo khoảng trắng. Phím Backspace xóa ký tự bên trái con trỏ. Nên tập gõ đúng ngón tay để gõ nhanh hơn.' },
+    ],
+    9: [
+      { title: 'Mạng máy tính và truyền thông', keys: ['kết nối mạng', 'mô hình mạng', 'bảo mật', 'IoT', 'giao thức'], content: 'Mạng máy tính cho phép các thiết bị trao đổi dữ liệu. Mô hình Client-Server là mô hình phổ biến nhất. IoT (Internet of Things) là mạng kết nối các thiết bị thông minh. Giao thức TCP/IP là nền tảng của mạng Internet.' },
+      { title: 'An ninh mạng và bảo mật thông tin', keys: ['tường lửa', 'mã hóa', 'xác thực', 'phần mềm độc hại'], content: 'Tường lửa (Firewall) ngăn chặn truy cập trái phép. Mã hóa dữ liệu giúp bảo vệ thông tin khi truyền qua mạng. Xác thực hai yếu tố (2FA) tăng cường bảo mật tài khoản. Phần mềm độc hại gồm virus, trojan, ransomware.' },
+    ],
+    10: [
+      { title: 'Thông tin và dữ liệu', keys: ['dữ liệu số', 'thông tin', 'biểu diễn thông tin', 'hệ nhị phân'], content: 'Dữ liệu là "nguyên liệu thô" chưa xử lý, thông tin là dữ liệu đã được xử lý mang ý nghĩa. Máy tính biểu diễn thông tin bằng hệ nhị phân (0 và 1). Mỗi bit lưu trữ giá trị 0 hoặc 1, 8 bit tạo thành 1 byte.' },
+      { title: 'Mạng máy tính và Internet', keys: ['mạng LAN', 'mạng WAN', 'giao thức', 'địa chỉ IP'], content: 'LAN là mạng cục bộ phạm vi hẹp (phòng học, công ty). WAN là mạng diện rộng kết nối nhiều LAN. Giao thức TCP/IP là bộ quy tắc truyền dữ liệu trên Internet. Mỗi thiết bị có địa chỉ IP riêng biệt để định danh trên mạng.' },
+      { title: 'Giải quyết vấn đề với Python', keys: ['Python', 'biến', 'vòng lặp', 'hàm'], content: 'Python là ngôn ngữ lập trình bậc cao, dễ học. Biến dùng để lưu trữ dữ liệu tạm thời. Vòng lặp for/while giúp thực hiện lặp đi lặp lại. Hàm (def) giúp tổ chức code thành các khối có thể tái sử dụng.' },
+      { title: 'Đạo đức và pháp luật trong môi trường số', keys: ['mã nguồn mở', 'bản quyền', 'quyền sở hữu trí tuệ', 'phần mềm'], content: 'Phần mềm mã nguồn mở được chia sẻ miễn phí, cho phép xem và sửa mã nguồn (ví dụ: Linux, LibreOffice). Vi phạm bản quyền phần mềm là hành vi trái pháp luật. Cần tôn trọng quyền sở hữu trí tuệ của người khác.' },
+    ],
+    11: [
+      { title: 'Cơ sở dữ liệu quan hệ', keys: ['hệ quản trị CSDL', 'bảng dữ liệu', 'khóa chính', 'quan hệ'], content: 'Cơ sở dữ liệu quan hệ tổ chức dữ liệu thành các bảng (table). Mỗi bảng gồm các hàng (bản ghi) và cột (trường dữ liệu). Khóa chính (Primary Key) là trường duy nhất xác định mỗi bản ghi. Quan hệ giữa các bảng được thiết lập qua khóa ngoại (Foreign Key).' },
+      { title: 'Ngôn ngữ truy vấn SQL', keys: ['SQL', 'SELECT', 'INSERT', 'WHERE'], content: 'SQL (Structured Query Language) là ngôn ngữ chuẩn để truy vấn CSDL. SELECT dùng để truy vấn dữ liệu, INSERT thêm dữ liệu mới, UPDATE cập nhật, DELETE xóa. Mệnh đề WHERE lọc dữ liệu theo điều kiện. ORDER BY sắp xếp kết quả.' },
+      { title: 'Bảo mật hệ thống thông tin', keys: ['bảo mật hệ thống', 'thực thể', 'phân quyền', 'sao lưu'], content: 'Bảo mật hệ thống bao gồm phân quyền truy cập cho người dùng, mã hóa dữ liệu nhạy cảm, sao lưu định kỳ. Thực thể (Entity) là đối tượng cần quản lý trong CSDL. Phân quyền đảm bảo chỉ người có thẩm quyền mới truy cập được dữ liệu.' },
+    ],
   };
 
   const getLesson = (index: number) => {
     if (gradeLessons.length > 0) return gradeLessons[index % gradeLessons.length];
-    const fallbacks = FALLBACK_TOPICS[grade] || [{ title: `Tin học ${grade}`, keys: ['kiến thức cơ bản', 'ứng dụng', 'khái niệm'] }];
+    const fallbacks = FALLBACK_TOPICS[grade] || [{ title: `Tin học ${grade}`, keys: ['kiến thức cơ bản', 'ứng dụng', 'khái niệm'], content: `Kiến thức tin học cơ bản dành cho học sinh lớp ${grade}.` }];
     return fallbacks[index % fallbacks.length];
   };
 
@@ -595,6 +622,8 @@ for (let g = 1; g <= 12; g++) {
     const topic = lesson?.title.replace(/Bài \d+: /, '') || `Tin học ${grade}`;
     const keys = (lesson as any)?.keyConcepts || (lesson as any)?.keys || ['Kiến thức cốt lõi'];
     const key = keys[i % keys.length];
+    const lessonContent = (lesson as any)?.content || '';
+    const snippet = extractSnippet(lessonContent, key);
     
     ADVANCED_QUESTIONS.push({
       id: `g${grade}_adv_mc_${i + 1}`,
@@ -610,13 +639,20 @@ for (let g = 1; g <= 12; g++) {
         `Cả 3 phương án trên đều không phản ánh đúng bản chất.`
       ],
       correctAnswer: `Phát biểu chính xác và đầy đủ nhất về đặc điểm của ${key}.`,
-      explanation: lesson ? `Dựa vào nội dung bài "${lesson.title}" trong sách Kết nối tri thức Lớp ${grade}.` : `Giải thích chung cho khối ${grade}.`
+      explanation: snippet
+        ? `Theo bài "${topic}" (SGK Tin học ${grade} KNTT): ${snippet}. Đáp án A phản ánh đúng nội dung trọng tâm này. Các phương án khác đều sai lệch hoặc không đầy đủ.`
+        : `"${key}" là khái niệm trọng tâm trong chủ đề "${topic}" (SGK Tin học ${grade} KNTT). Đáp án A phản ánh chính xác đặc điểm cốt lõi, các phương án B, C, D đều sai hoặc không có cơ sở.`
     });
   }
 
   // 2 True/False Cluster Questions
   const l1 = getLesson(3);
-  const t1 = l1 ? l1.title.replace(/Bài \d+: /, '') : `Khái niệm Tin học ${grade}`;
+  const t1 = l1?.title.replace(/Bài \d+: /, '') || `Khái niệm Tin học ${grade}`;
+  const l1Content = (l1 as any)?.content || '';
+  const l1Keys = (l1 as any)?.keyConcepts || (l1 as any)?.keys || [];
+  const sn1a = extractSnippet(l1Content, l1Keys[0] || t1);
+  const sn1b = extractSnippet(l1Content, l1Keys[1] || '');
+  
   ADVANCED_QUESTIONS.push({
     id: `g${grade}_adv_tf_1`,
     subjectId: `g${grade}`,
@@ -625,27 +661,32 @@ for (let g = 1; g <= 12; g++) {
     difficulty: 'medium',
     content: `Khi tìm hiểu về nội dung "${t1}" trong sách Tin học ${grade} KNTT, một nhóm học sinh đưa ra các nhận định sau đây. Đánh giá tính Đúng/Sai của mỗi nhận định:`,
     trueFalseStatements: [
-      { id: 'a', content: `Nội dung này là nền tảng cốt lõi giúp hình thành tư duy môn Tin học.`, isTrue: true, explanation: 'Hỗ trợ việc xây dựng tư duy logic lâu dài.' },
-      { id: 'b', content: `Kiến thức này hoàn toàn chỉ là lý thuyết, không có tính ứng dụng vào thực tế.`, isTrue: false, explanation: 'Mọi kiến thức môn Tin học KNTT đều gắn liền với thực tiễn.' },
-      { id: 'c', content: `Nó yêu cầu học sinh phải thao tác thực hành cẩn thận.`, isTrue: true, explanation: 'Đúng chuẩn yêu cầu cần đạt của bài học.' },
-      { id: 'd', content: `Chỉ cần ghi nhớ máy móc là có thể hiểu được bản chất.`, isTrue: false, explanation: 'Bộ môn Tin học đề cao thực hành và tư duy tính toán, không khuyến khích học vẹt.' }
+      { id: 'a', content: `"${t1}" là kiến thức nền tảng, giúp học sinh hình thành tư duy và kỹ năng sử dụng công nghệ.`, isTrue: true, explanation: sn1a ? `Đúng. Theo SGK: ${sn1a}. Đây là nội dung cốt lõi trong chương trình KNTT.` : `Đúng. "${t1}" là phần kiến thức nền tảng thiết yếu trong chương trình Kết nối tri thức lớp ${grade}.` },
+      { id: 'b', content: `Nội dung "${t1}" thuần túy lý thuyết, không cần thực hành trên máy tính.`, isTrue: false, explanation: `Sai. Chương trình KNTT lớp ${grade} yêu cầu học sinh phải kết hợp lý thuyết với thực hành trên máy tính. ${sn1b ? 'SGK ghi rõ: ' + sn1b + '.' : 'Mọi bài học đều có phần thực hành đi kèm.'}` },
+      { id: 'c', content: `Học sinh cần nắm vững "${t1}" trước khi học các chủ đề nâng cao hơn.`, isTrue: true, explanation: `Đúng. "${t1}" cung cấp kiến thức tiên quyết cho các bài học sau trong chương trình lớp ${grade}. Bỏ qua sẽ gây khó khăn khi học phần nâng cao.` },
+      { id: 'd', content: `Chỉ cần học thuộc lòng định nghĩa là đủ để đạt điểm cao phần "${t1}".`, isTrue: false, explanation: `Sai. Chương trình Tin học KNTT đề cao năng lực vận dụng và tư duy giải quyết vấn đề, không khuyến khích ghi nhớ máy móc. Đề kiểm tra luôn yêu cầu phân tích, so sánh hoặc áp dụng thực tế.` }
     ]
   });
   
   const l2 = getLesson(5);
-  const t2 = l2 ? l2.title.replace(/Bài \d+: /, '') : `Ứng dụng Tin học ${grade}`;
+  const t2 = l2?.title.replace(/Bài \d+: /, '') || `Ứng dụng Tin học ${grade}`;
+  const l2Content = (l2 as any)?.content || '';
+  const l2Keys = (l2 as any)?.keyConcepts || (l2 as any)?.keys || [];
+  const sn2a = extractSnippet(l2Content, l2Keys[0] || t2);
+  const sn2c = extractSnippet(l2Content, l2Keys[2] || '');
+  
   ADVANCED_QUESTIONS.push({
     id: `g${grade}_adv_tf_2`,
     subjectId: `g${grade}`,
     type: 'true_false_cluster',
     grade: grade,
     difficulty: 'hard',
-    content: `Trong một bài thực hành liên quan đến "${t2}", hãy đánh giá tính Đúng/Sai của các thao tác/nhận định sau đây:`,
+    content: `Trong một bài thực hành liên quan đến "${t2}" (Tin học ${grade} KNTT), hãy đánh giá tính Đúng/Sai của các thao tác/nhận định sau đây:`,
     trueFalseStatements: [
-      { id: 'a', content: `Xác định rõ ràng mục tiêu và các bước xử lý ban đầu.`, isTrue: true, explanation: 'Bước đầu tiên luôn là phân tích rõ thiết kế.' },
-      { id: 'b', content: `Vội vàng thực hiện ngay các bước kỹ thuật mà không cần lên kế hoạch.`, isTrue: false, explanation: 'Làm việc thiếu kế hoạch dễ dẫn tới sai sót và phải sửa đổi nhiều lần.' },
-      { id: 'c', content: `Liên tục kiểm thử và đánh giá lại chất lượng sản phẩm trong quá trình làm.`, isTrue: true, explanation: 'Khâu kiểm thử rất quan trọng và cần được thực hiện thường xuyên.' },
-      { id: 'd', content: `Bỏ qua các cảnh báo bảo mật vì nó làm chậm quá trình thực hành.`, isTrue: false, explanation: 'Bảo đảm an toàn môi trường số luôn là ưu tiên hàng đầu theo chuẩn KNTT.' }
+      { id: 'a', content: `Trước khi thực hành, cần xác định rõ mục tiêu và lên kế hoạch các bước thực hiện.`, isTrue: true, explanation: sn2a ? `Đúng. Theo nội dung bài "${t2}": ${sn2a}. Lập kế hoạch giúp tiết kiệm thời gian và giảm sai sót.` : `Đúng. Việc lên kế hoạch rõ ràng giúp thực hành bài "${t2}" hiệu quả, tránh thao tác thừa.` },
+      { id: 'b', content: `Không cần lên kế hoạch, cứ thử sai rồi sẽ tìm ra cách làm đúng.`, isTrue: false, explanation: `Sai. Phương pháp thử sai không có kế hoạch sẽ tốn thời gian và có thể gây lỗi nghiêm trọng (mất dữ liệu, sai kết quả). SGK KNTT luôn hướng dẫn học sinh tuân theo quy trình từng bước.` },
+      { id: 'c', content: `Sau mỗi bước thực hành, nên kiểm tra kết quả trước khi làm bước tiếp theo.`, isTrue: true, explanation: sn2c ? `Đúng. Theo SGK: ${sn2c}. Kiểm tra từng bước giúp phát hiện lỗi sớm và tiết kiệm công sức sửa chữa.` : `Đúng. Kiểm tra kết quả từng bước là kỹ năng quan trọng được nhấn mạnh trong bài "${t2}".` },
+      { id: 'd', content: `Các cảnh báo bảo mật trên máy tính không quan trọng, có thể bỏ qua để thao tác nhanh hơn.`, isTrue: false, explanation: `Sai. Bỏ qua cảnh báo bảo mật có thể dẫn đến lây nhiễm mã độc, mất dữ liệu hoặc bị xâm nhập tài khoản. Chương trình Tin học KNTT luôn đặt an toàn thông tin lên hàng đầu.` }
     ]
   });
 
@@ -653,6 +694,8 @@ for (let g = 1; g <= 12; g++) {
   const l3 = getLesson(7);
   const t3 = l3?.title.replace(/Bài \d+: /, '') || `Kiến thức cốt lõi lớp ${grade}`;
   const keys3 = (l3 as any)?.keyConcepts || (l3 as any)?.keys || ['tin học', `lớp ${grade}`, 'công nghệ'];
+  const l3Content = (l3 as any)?.content || '';
+  const sn3 = extractSnippet(l3Content, keys3[0] || t3);
   ADVANCED_QUESTIONS.push({
     id: `g${grade}_adv_es_1`,
     subjectId: `g${grade}`,
@@ -661,13 +704,17 @@ for (let g = 1; g <= 12; g++) {
     difficulty: 'medium',
     content: `Dựa vào những gì đã được học, em hãy trình bày tóm tắt nội dung cốt lõi của chủ đề "${t3}". Theo em, vì sao nội dung này lại mang tính cấp thiết hiện nay?`,
     keywords: [...keys3, 'cấp thiết', 'thực tế', 'tóm tắt', 'vai trò'],
-    explanation: `Yêu cầu học sinh làm nổi bật được các từ khóa: ${keys3.join(', ')} và lý giải logic.`
+    explanation: sn3
+      ? `Gợi ý đáp án: Theo SGK Tin học ${grade} KNTT, bài "${t3}" nêu rõ: ${sn3}. Học sinh cần trình bày được: (1) Các khái niệm trọng tâm: ${keys3.join(', ')}; (2) Liên hệ thực tế để giải thích vì sao kiến thức này cấp thiết trong thời đại số.`
+      : `Gợi ý đáp án: Học sinh cần nêu được các khái niệm: ${keys3.join(', ')}. Trình bày vai trò và tính cấp thiết của "${t3}" trong cuộc sống số hiện đại.`
   });
   
   const l4 = getLesson(8);
   const t4 = l4?.title.replace(/Bài \d+: /, '') || `Xử lý tình huống lớp ${grade}`;
   const l4Keys = (l4 as any)?.keyConcepts || (l4 as any)?.keys || ['phương pháp', 'xử lý', 'bảo mật', 'an toàn'];
   const keys4 = ['giải quyết', 'hợp lý', ...l4Keys.slice(0, 2)];
+  const l4Content = (l4 as any)?.content || '';
+  const sn4 = extractSnippet(l4Content, l4Keys[0] || t4);
   ADVANCED_QUESTIONS.push({
     id: `g${grade}_adv_es_2`,
     subjectId: `g${grade}`,
@@ -676,7 +723,9 @@ for (let g = 1; g <= 12; g++) {
     difficulty: 'hard',
     content: `Áp dụng kiến thức về "${t4}" (Tin học ${grade} - Kết nối tri thức), em hãy phân tích và đưa ra một ví dụ cụ thể về việc vận dụng kiến thức này để giải bài toán trong cuộc sống của em.`,
     keywords: keys4,
-    explanation: `Học sinh cần chủ động đưa ra được phương pháp phân tích hợp lý bằng ngôn ngữ chuyên ngành (Từ chốt: ${keys4.join(', ')}).`
+    explanation: sn4
+      ? `Gợi ý đáp án: Theo SGK, bài "${t4}" dạy rằng: ${sn4}. Học sinh cần: (1) Phân tích rõ vấn đề; (2) Áp dụng kiến thức "${t4}" (từ chốt: ${keys4.join(', ')}); (3) Nêu ví dụ cụ thể, thực tế và giải thích cách giải quyết hợp lý.`
+      : `Gợi ý đáp án: Học sinh cần vận dụng kiến thức "${t4}" để phân tích vấn đề thực tế. Sử dụng các từ chốt: ${keys4.join(', ')}. Ví dụ minh họa phải cụ thể, có bước giải quyết rõ ràng.`
   });
 }
 
