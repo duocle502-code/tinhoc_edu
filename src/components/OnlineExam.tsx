@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAllExams, useExamResults, useGamification, useCustomQuestions } from '../store';
-import { Exam, Question, ExamResult } from '../types';
+import { Exam, Question, ExamResult, GradeLevel } from '../types';
 import { DEMO_QUESTIONS } from '../data/demo';
 import { ArrowLeft, Clock, CheckCircle2, XCircle, FileText, Calendar, Trophy, Zap, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -16,6 +16,7 @@ export function OnlineExam({ onBack }: Props) {
   const [customQuestions] = useCustomQuestions();
   
   const [view, setView] = useState<'list' | 'detail' | 'taking' | 'result'>('list');
+  const [selectedGrade, setSelectedGrade] = useState<GradeLevel | null>(null);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [currentResult, setCurrentResult] = useState<ExamResult | null>(null);
 
@@ -35,8 +36,39 @@ export function OnlineExam({ onBack }: Props) {
           </div>
         </div>
 
+        {/* Grade Filter */}
+        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-none snap-x">
+          <button
+            onClick={() => setSelectedGrade(null)}
+            className={cn(
+              "px-5 py-2.5 rounded-xl whitespace-nowrap font-bold transition-all snap-start shadow-sm",
+              selectedGrade === null
+                ? "bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none"
+                : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+            )}
+          >
+            Tất cả khối lớp
+          </button>
+          {Array.from({ length: 12 }, (_, i) => (i + 1) as GradeLevel).map(grade => (
+            <button
+              key={grade}
+              onClick={() => setSelectedGrade(grade)}
+              className={cn(
+                "px-5 py-2.5 rounded-xl whitespace-nowrap font-bold transition-all snap-start flex gap-2 items-center shadow-sm",
+                selectedGrade === grade
+                  ? "bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none"
+                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+              )}
+            >
+              Lớp {grade}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {allExams.map(exam => {
+          {allExams
+            .filter(exam => selectedGrade === null || exam.grade === selectedGrade)
+            .map(exam => {
             const result = examResults.find(r => r.examId === exam.id);
             const isCompleted = !!result;
             
@@ -93,9 +125,9 @@ export function OnlineExam({ onBack }: Props) {
             );
           })}
           
-          {allExams.length === 0 && (
-             <div className="col-span-full p-8 text-center text-slate-500 border border-dashed rounded-2xl">
-               Chưa có đề thi nào
+          {allExams.filter(exam => selectedGrade === null || exam.grade === selectedGrade).length === 0 && (
+             <div className="col-span-full p-12 text-center text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl">
+               Chưa có đề thi nào cho khối lớp này.
              </div>
           )}
         </div>
