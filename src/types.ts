@@ -30,13 +30,21 @@ export interface Subject {
   grade?: GradeLevel;
 }
 
+export interface TrueFalseStatement {
+  id: string;
+  content: string;
+  isTrue: boolean;
+}
+
 export interface Question {
   id: string;
   subjectId: string;
   content: string;
-  type: 'multiple_choice' | 'programming' | 'theory';
+  type: 'multiple_choice' | 'programming' | 'theory' | 'true_false_cluster' | 'essay';
   options?: string[];
   correctAnswer?: string;
+  trueFalseStatements?: TrueFalseStatement[];
+  keywords?: string[]; // for essay auto-grading
   explanation?: string;
   difficulty: 'easy' | 'medium' | 'hard';
   isCustom?: boolean; // AI-generated
