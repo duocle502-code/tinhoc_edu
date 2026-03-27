@@ -659,7 +659,7 @@ export const DEMO_EXAMS: Exam[] = Array.from({ length: 12 }, (_, i) => {
     `g${grade}_adv_es_2`
   ];
 
-  const duration = grade <= 5 ? 1200 : (grade <= 9 ? 1800 : 2700); // Tiểu học 20m, THCS 30m, THPT 45m
+  const duration = 2700; // 45 phút cho tất cả các lớp
 
   return {
     id: `exam_g${grade}_3part`,
