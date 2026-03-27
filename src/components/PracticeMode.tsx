@@ -13,7 +13,7 @@ interface Props {
   onBack: () => void;
 }
 
-type PracticeView = 'hub' | 'flashcard' | 'speed' | 'review' | 'exam';
+type PracticeView = 'hub' | 'flashcard' | 'speed' | 'review';
 
 export function PracticeMode({ onBack }: Props) {
   const [view, setView] = useState<PracticeView>('hub');
@@ -51,9 +51,6 @@ export function PracticeMode({ onBack }: Props) {
       .filter(q => !selectedGrade || q.grade === selectedGrade);
     return <FlashcardMode questions={reviewQuestions.length > 0 ? reviewQuestions : allQuestions.slice(0, 5)} onBack={() => setView('hub')} isReview />;
   }
-  if (view === 'exam') {
-    return <ExamMode questions={allQuestions} onBack={() => setView('hub')} />;
-  }
 
   return null;
 }
@@ -71,7 +68,6 @@ function PracticeHub({ onBack, onSelect, wrongCount, selectedGrade, onSelectGrad
     { id: 'flashcard' as PracticeView, name: 'Flashcard', desc: 'Lật thẻ ôn tập kiến thức', icon: Layers, color: 'bg-blue-500', gradient: 'from-blue-500 to-cyan-500' },
     { id: 'speed' as PracticeView, name: 'Speed Quiz', desc: 'Trả lời nhanh trong 10 giây', icon: Zap, color: 'bg-amber-500', gradient: 'from-amber-500 to-orange-500' },
     { id: 'review' as PracticeView, name: 'Ôn câu sai', desc: `${wrongCount} câu cần ôn lại`, icon: RotateCcw, color: 'bg-rose-500', gradient: 'from-rose-500 to-pink-500' },
-    { id: 'exam' as PracticeView, name: 'Thi thử', desc: 'Mô phỏng đề thi thật', icon: FileText, color: 'bg-emerald-500', gradient: 'from-emerald-500 to-teal-500' },
   ];
 
   return (
@@ -325,128 +321,6 @@ function SpeedQuiz({ questions, onBack }: { questions: Question[]; onBack: () =>
           );
         })}
       </div>
-    </div>
-  );
-}
-
-// === EXAM MODE ===
-function ExamMode({ questions, onBack }: { questions: Question[]; onBack: () => void }) {
-  const examQs = useState(() => [...questions].sort(() => Math.random() - 0.5).slice(0, 20))[0];
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(1200); // 20 minutes
-  const [gamification, setGamification] = useGamification();
-
-  React.useEffect(() => {
-    if (submitted || timeLeft <= 0) {
-      if (!submitted) handleSubmit();
-      return;
-    }
-    const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [timeLeft, submitted]);
-
-  const handleSubmit = () => {
-    setSubmitted(true);
-    const correct = examQs.filter((q, i) => answers[i] === q.correctAnswer).length;
-    const xpEarned = correct * 10;
-    setGamification({
-      ...gamification,
-      xp: gamification.xp + xpEarned,
-      level: Math.floor((gamification.xp + xpEarned) / 100) + 1,
-      totalAnswered: gamification.totalAnswered + examQs.length,
-      totalCorrect: gamification.totalCorrect + correct,
-    });
-  };
-
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
-
-  if (submitted) {
-    const correct = examQs.filter((q, i) => answers[i] === q.correctAnswer).length;
-    const pct = Math.round((correct / examQs.length) * 100);
-    return (
-      <div className="p-6 max-w-3xl mx-auto animate-slide-up space-y-6">
-        <div className="text-center space-y-4 bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
-          <div className="text-5xl">{pct >= 80 ? '🎓' : pct >= 50 ? '📝' : '📖'}</div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Kết quả thi thử</h2>
-          <p className="text-4xl font-bold text-indigo-600">{pct} điểm</p>
-          <p className="text-slate-500 dark:text-slate-400">{correct}/{examQs.length} câu đúng • +{correct * 10} XP</p>
-          <p className={pct >= 80 ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}>
-            {pct >= 80 ? '✅ ĐẠT — Tuyệt vời!' : '⚠️ Cần cố gắng thêm'}
-          </p>
-        </div>
-
-        {/* Review */}
-        <div className="space-y-3">
-          {examQs.map((q, i) => {
-            const isCorrect = answers[i] === q.correctAnswer;
-            return (
-              <div key={i} className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-emerald-200 bg-emerald-50 dark:bg-emerald-950 dark:border-emerald-800' : 'border-rose-200 bg-rose-50 dark:bg-rose-950 dark:border-rose-800'}`}>
-                <p className="font-medium text-sm mb-1">
-                  {isCorrect ? <CheckCircle2 className="w-4 h-4 inline text-emerald-600 mr-1" /> : <XCircle className="w-4 h-4 inline text-rose-600 mr-1" />}
-                  Câu {i + 1}: {q.content}
-                </p>
-                {!isCorrect && (
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                    Bạn chọn: <strong>{answers[i] || '(chưa trả lời)'}</strong> • Đáp án: <strong className="text-emerald-700 dark:text-emerald-400">{q.correctAnswer}</strong>
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <button onClick={onBack} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">Quay lại</button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 sticky top-0 z-10">
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium">
-          <ArrowLeft className="w-5 h-5" /> Thoát
-        </button>
-        <h3 className="font-bold text-slate-900 dark:text-white">Thi thử ({examQs.length} câu)</h3>
-        <div className={cn(
-          "flex items-center gap-1 px-3 py-1.5 rounded-lg font-mono font-bold",
-          timeLeft <= 60 ? "bg-rose-100 text-rose-600" : "bg-indigo-100 text-indigo-600"
-        )}>
-          <Clock className="w-4 h-4" />
-          {formatTime(timeLeft)}
-        </div>
-      </div>
-
-      <div className="space-y-6">
-        {examQs.map((q, i) => (
-          <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <p className="font-bold text-slate-900 dark:text-white mb-4">Câu {i + 1}: {q.content}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {q.options?.map((opt, j) => (
-                <button
-                  key={j}
-                  onClick={() => setAnswers({ ...answers, [i]: opt })}
-                  className={cn(
-                    "p-3 rounded-xl border-2 text-left text-sm font-medium transition-all",
-                    answers[i] === opt
-                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-200"
-                      : "border-slate-200 dark:border-slate-700 hover:border-indigo-300"
-                  )}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onClick={handleSubmit}
-        className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-lg"
-      >
-        Nộp bài ({Object.keys(answers).length}/{examQs.length} đã trả lời)
-      </button>
     </div>
   );
 }
