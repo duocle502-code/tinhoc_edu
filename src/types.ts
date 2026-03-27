@@ -34,6 +34,7 @@ export interface TrueFalseStatement {
   id: string;
   content: string;
   isTrue: boolean;
+  explanation?: string;
 }
 
 export interface Question {
