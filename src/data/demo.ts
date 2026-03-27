@@ -572,75 +572,111 @@ const ADVANCED_QUESTIONS: Question[] = [];
 
 for (let g = 1; g <= 12; g++) {
   const grade = g as GradeLevel;
+  const gradeChapters = TEXTBOOK_CHAPTERS.filter(c => c.grade === grade);
+  const gradeLessons = gradeChapters.flatMap(c => c.lessons);
   
+  const FALLBACK_TOPICS: Record<number, { title: string, keys: string[] }[]> = {
+    1: [{ title: 'Làm quen với máy tính', keys: ['chuột', 'màn hình', 'bàn phím', 'thân máy'] }],
+    2: [{ title: 'Khám phá thế giới số', keys: ['thông tin', 'an toàn', 'internet', 'trò chơi'] }],
+    9: [{ title: 'Mạng máy tính và truyền thông', keys: ['kết nối mạng', 'mô hình mang', 'bảo mật', 'IoT', 'giao thức'] }],
+    10: [{ title: 'Tin học cơ sở và Khoa học máy tính', keys: ['dữ liệu số', 'thông tin', 'mạng LAN', 'mã nguồn mở', 'Python'] }],
+    11: [{ title: 'Cơ sở dữ liệu căn bản', keys: ['hệ quản trị CSDL', 'bảng dữ liệu', 'SQL', 'bảo mật hệ thống', 'thực thể'] }],
+  };
+
+  const getLesson = (index: number) => {
+    if (gradeLessons.length > 0) return gradeLessons[index % gradeLessons.length];
+    const fallbacks = FALLBACK_TOPICS[grade] || [{ title: `Tin học ${grade}`, keys: ['kiến thức cơ bản', 'ứng dụng', 'khái niệm'] }];
+    return fallbacks[index % fallbacks.length];
+  };
+
   // 24 MC Questions
   for (let i = 0; i < 24; i++) {
+    const lesson = getLesson(i);
+    const topic = lesson?.title.replace(/Bài \d+: /, '') || `Tin học ${grade}`;
+    const keys = (lesson as any)?.keyConcepts || (lesson as any)?.keys || ['Kiến thức cốt lõi'];
+    const key = keys[i % keys.length];
+    
     ADVANCED_QUESTIONS.push({
       id: `g${grade}_adv_mc_${i + 1}`,
       subjectId: `g${grade}`,
       type: 'multiple_choice',
       grade: grade,
       difficulty: i < 10 ? 'easy' : (i < 20 ? 'medium' : 'hard'),
-      content: i === 0 ? `Câu hỏi trắc nghiệm số 1 - Tin học ${grade} Kết nối tri thức.`
-             : `Câu hỏi trắc nghiệm số ${i + 1} - Tin học ${grade} Kết nối tri thức.`,
-      options: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'],
-      correctAnswer: 'Phương án A',
-      explanation: `Đây là câu hỏi mẫu trắc nghiệm môn Tin học lớp ${grade}.`
+      content: `Trong chủ đề "${topic}" (Tin học ${grade} KNTT), "${key}" được hiểu như thế nào là đúng nhất?`,
+      options: [
+        `Phát biểu chính xác và đầy đủ nhất về đặc điểm của ${key}.`,
+        `${key} là một nội dung thứ yếu, ít được áp dụng thực tế.`,
+        `Định nghĩa hoàn toàn sai lệch dẫn đến hiểu lầm về ${key}.`,
+        `Cả 3 phương án trên đều không phản ánh đúng bản chất.`
+      ],
+      correctAnswer: `Phát biểu chính xác và đầy đủ nhất về đặc điểm của ${key}.`,
+      explanation: lesson ? `Dựa vào nội dung bài "${lesson.title}" trong sách Kết nối tri thức Lớp ${grade}.` : `Giải thích chung cho khối ${grade}.`
     });
   }
 
   // 2 True/False Cluster Questions
+  const l1 = getLesson(3);
+  const t1 = l1 ? l1.title.replace(/Bài \d+: /, '') : `Khái niệm Tin học ${grade}`;
   ADVANCED_QUESTIONS.push({
     id: `g${grade}_adv_tf_1`,
     subjectId: `g${grade}`,
     type: 'true_false_cluster',
     grade: grade,
     difficulty: 'medium',
-    content: `Các phát biểu sau đây về kiến thức Tin học lớp ${grade} là Đúng hay Sai?`,
+    content: `Khi tìm hiểu về nội dung "${t1}" trong sách Tin học ${grade} KNTT, một nhóm học sinh đưa ra các nhận định sau đây. Đánh giá tính Đúng/Sai của mỗi nhận định:`,
     trueFalseStatements: [
-      { id: 'a', content: 'Phát biểu A là một kiến thức hoàn toàn chính xác.', isTrue: true, explanation: 'Vì đây là nguyên tắc cơ bản đã được chứng minh.' },
-      { id: 'b', content: 'Phát biểu B có chứa thông tin sai lệch.', isTrue: false, explanation: 'Chi tiết X trong phát biểu này không đúng với thực tế.' },
-      { id: 'c', content: 'Phát biểu C phản ánh đúng bản chất vấn đề.', isTrue: true, explanation: 'Theo đúng định nghĩa trong sách giáo khoa.' },
-      { id: 'd', content: 'Phát biểu D chưa chính xác trong thực tế.', isTrue: false, explanation: 'Phương pháp này không còn được sử dụng trong thực tiễn.' }
+      { id: 'a', content: `Nội dung này là nền tảng cốt lõi giúp hình thành tư duy môn Tin học.`, isTrue: true, explanation: 'Hỗ trợ việc xây dựng tư duy logic lâu dài.' },
+      { id: 'b', content: `Kiến thức này hoàn toàn chỉ là lý thuyết, không có tính ứng dụng vào thực tế.`, isTrue: false, explanation: 'Mọi kiến thức môn Tin học KNTT đều gắn liền với thực tiễn.' },
+      { id: 'c', content: `Nó yêu cầu học sinh phải thao tác thực hành cẩn thận.`, isTrue: true, explanation: 'Đúng chuẩn yêu cầu cần đạt của bài học.' },
+      { id: 'd', content: `Chỉ cần ghi nhớ máy móc là có thể hiểu được bản chất.`, isTrue: false, explanation: 'Bộ môn Tin học đề cao thực hành và tư duy tính toán, không khuyến khích học vẹt.' }
     ]
   });
   
+  const l2 = getLesson(5);
+  const t2 = l2 ? l2.title.replace(/Bài \d+: /, '') : `Ứng dụng Tin học ${grade}`;
   ADVANCED_QUESTIONS.push({
     id: `g${grade}_adv_tf_2`,
     subjectId: `g${grade}`,
     type: 'true_false_cluster',
     grade: grade,
     difficulty: 'hard',
-    content: `Đọc kỹ tình huống thực tế sau và xác định tính Đúng/Sai của mỗi nhận định:`,
+    content: `Trong một bài thực hành liên quan đến "${t2}", hãy đánh giá tính Đúng/Sai của các thao tác/nhận định sau đây:`,
     trueFalseStatements: [
-      { id: 'a', content: 'Nhận định thứ nhất áp dụng tốt trong thực tiễn.', isTrue: true, explanation: 'Có tính ứng dụng cao và an toàn.' },
-      { id: 'b', content: 'Nhận định thứ hai là sai nguyên tắc.', isTrue: false, explanation: 'Vi phạm quy tắc bảo mật cơ bản.' },
-      { id: 'c', content: 'Nhận định thứ ba sai hoàn toàn.', isTrue: false, explanation: 'Không đảm bảo tính trọn vẹn của dữ liệu.' },
-      { id: 'd', content: 'Nhận định cuối là một nguyên tắc cơ bản cần nhớ.', isTrue: true, explanation: 'Nguyên tắc này giúp tránh rủi ro mất mát dữ liệu.' }
+      { id: 'a', content: `Xác định rõ ràng mục tiêu và các bước xử lý ban đầu.`, isTrue: true, explanation: 'Bước đầu tiên luôn là phân tích rõ thiết kế.' },
+      { id: 'b', content: `Vội vàng thực hiện ngay các bước kỹ thuật mà không cần lên kế hoạch.`, isTrue: false, explanation: 'Làm việc thiếu kế hoạch dễ dẫn tới sai sót và phải sửa đổi nhiều lần.' },
+      { id: 'c', content: `Liên tục kiểm thử và đánh giá lại chất lượng sản phẩm trong quá trình làm.`, isTrue: true, explanation: 'Khâu kiểm thử rất quan trọng và cần được thực hiện thường xuyên.' },
+      { id: 'd', content: `Bỏ qua các cảnh báo bảo mật vì nó làm chậm quá trình thực hành.`, isTrue: false, explanation: 'Bảo đảm an toàn môi trường số luôn là ưu tiên hàng đầu theo chuẩn KNTT.' }
     ]
   });
 
   // 2 Essay Questions
+  const l3 = getLesson(7);
+  const t3 = l3?.title.replace(/Bài \d+: /, '') || `Kiến thức cốt lõi lớp ${grade}`;
+  const keys3 = (l3 as any)?.keyConcepts || (l3 as any)?.keys || ['tin học', `lớp ${grade}`, 'công nghệ'];
   ADVANCED_QUESTIONS.push({
     id: `g${grade}_adv_es_1`,
     subjectId: `g${grade}`,
     type: 'essay',
     grade: grade,
     difficulty: 'medium',
-    content: `Hãy trình bày ngắn gọn một khái niệm trọng tâm mà em đã học trong chương trình Tin học ${grade}.`,
-    keywords: ['khái niệm', 'phần mềm', 'tin học', `lớp ${grade}`, 'quan trọng', 'cơ bản'],
-    explanation: 'Câu trả lời tự luận cần bao hàm các từ khoá liên quan đến kiến thức cơ bản của môn học.'
+    content: `Dựa vào những gì đã được học, em hãy trình bày tóm tắt nội dung cốt lõi của chủ đề "${t3}". Theo em, vì sao nội dung này lại mang tính cấp thiết hiện nay?`,
+    keywords: [...keys3, 'cấp thiết', 'thực tế', 'tóm tắt', 'vai trò'],
+    explanation: `Yêu cầu học sinh làm nổi bật được các từ khóa: ${keys3.join(', ')} và lý giải logic.`
   });
   
+  const l4 = getLesson(8);
+  const t4 = l4?.title.replace(/Bài \d+: /, '') || `Xử lý tình huống lớp ${grade}`;
+  const l4Keys = (l4 as any)?.keyConcepts || (l4 as any)?.keys || ['phương pháp', 'xử lý', 'bảo mật', 'an toàn'];
+  const keys4 = ['giải quyết', 'hợp lý', ...l4Keys.slice(0, 2)];
   ADVANCED_QUESTIONS.push({
     id: `g${grade}_adv_es_2`,
     subjectId: `g${grade}`,
     type: 'essay',
     grade: grade,
     difficulty: 'hard',
-    content: `Ứng dụng của Tin học ${grade} trong đời sống thực tế là gì? Em hãy lấy ví dụ minh hoạ.`,
-    keywords: ['ứng dụng', 'đời sống', 'ví dụ', 'thực tế', 'giải quyết', 'hữu ích', 'công nghệ'],
-    explanation: 'Trình bày tư duy áp dụng công nghệ và lấy ví dụ thực tiễn.'
+    content: `Áp dụng kiến thức về "${t4}" (Tin học ${grade} - Kết nối tri thức), em hãy phân tích và đưa ra một ví dụ cụ thể về việc vận dụng kiến thức này để giải bài toán trong cuộc sống của em.`,
+    keywords: keys4,
+    explanation: `Học sinh cần chủ động đưa ra được phương pháp phân tích hợp lý bằng ngôn ngữ chuyên ngành (Từ chốt: ${keys4.join(', ')}).`
   });
 }
 
