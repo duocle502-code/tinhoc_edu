@@ -598,12 +598,11 @@ for (let g = 1; g <= 12; g++) {
     difficulty: 'medium',
     content: `Các phát biểu sau đây về kiến thức Tin học lớp ${grade} là Đúng hay Sai?`,
     trueFalseStatements: [
-      { id: 'a', content: 'Phát biểu A là một kiến thức hoàn toàn chính xác.', isTrue: true },
-      { id: 'b', content: 'Phát biểu B có chứa thông tin sai lệch.', isTrue: false },
-      { id: 'c', content: 'Phát biểu C phản ánh đúng bản chất vấn đề.', isTrue: true },
-      { id: 'd', content: 'Phát biểu D chưa chính xác trong thực tế.', isTrue: false }
-    ],
-    explanation: 'Giải thích: Việc nắm vững lý thuyết giúp phân biệt được đúng sai.'
+      { id: 'a', content: 'Phát biểu A là một kiến thức hoàn toàn chính xác.', isTrue: true, explanation: 'Vì đây là nguyên tắc cơ bản đã được chứng minh.' },
+      { id: 'b', content: 'Phát biểu B có chứa thông tin sai lệch.', isTrue: false, explanation: 'Chi tiết X trong phát biểu này không đúng với thực tế.' },
+      { id: 'c', content: 'Phát biểu C phản ánh đúng bản chất vấn đề.', isTrue: true, explanation: 'Theo đúng định nghĩa trong sách giáo khoa.' },
+      { id: 'd', content: 'Phát biểu D chưa chính xác trong thực tế.', isTrue: false, explanation: 'Phương pháp này không còn được sử dụng trong thực tiễn.' }
+    ]
   });
   
   ADVANCED_QUESTIONS.push({
@@ -614,12 +613,11 @@ for (let g = 1; g <= 12; g++) {
     difficulty: 'hard',
     content: `Đọc kỹ tình huống thực tế sau và xác định tính Đúng/Sai của mỗi nhận định:`,
     trueFalseStatements: [
-      { id: 'a', content: 'Nhận định thứ nhất áp dụng tốt trong thực tiễn.', isTrue: true },
-      { id: 'b', content: 'Nhận định thứ hai là sai nguyên tắc.', isTrue: false },
-      { id: 'c', content: 'Nhận định thứ ba sai hoàn toàn.', isTrue: false },
-      { id: 'd', content: 'Nhận định cuối là một nguyên tắc cơ bản cần nhớ.', isTrue: true }
-    ],
-    explanation: 'Giải thích: Áp dụng kiến thức thực tiễn để giải quyết.'
+      { id: 'a', content: 'Nhận định thứ nhất áp dụng tốt trong thực tiễn.', isTrue: true, explanation: 'Có tính ứng dụng cao và an toàn.' },
+      { id: 'b', content: 'Nhận định thứ hai là sai nguyên tắc.', isTrue: false, explanation: 'Vi phạm quy tắc bảo mật cơ bản.' },
+      { id: 'c', content: 'Nhận định thứ ba sai hoàn toàn.', isTrue: false, explanation: 'Không đảm bảo tính trọn vẹn của dữ liệu.' },
+      { id: 'd', content: 'Nhận định cuối là một nguyên tắc cơ bản cần nhớ.', isTrue: true, explanation: 'Nguyên tắc này giúp tránh rủi ro mất mát dữ liệu.' }
+    ]
   });
 
   // 2 Essay Questions
