@@ -11,6 +11,7 @@ import { PracticeMode } from './components/PracticeMode';
 import { Achievements } from './components/Achievements';
 import { Admin } from './components/Admin';
 import { LearningSection } from './components/LearningSection';
+import { OnlineExam } from './components/OnlineExam';
 import { useSettings} from './store';
 
 export default function App() {
@@ -46,6 +47,8 @@ export default function App() {
         return <History />;
       case 'practice':
         return <PracticeMode onBack={() => setCurrentView('dashboard')} />;
+      case 'online-exam':
+        return <OnlineExam onBack={() => setCurrentView('dashboard')} />;
       case 'achievements':
         return <Achievements />;
       case 'admin':
